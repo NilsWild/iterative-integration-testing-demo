@@ -1,4 +1,4 @@
-# Interative Integration Testing Demonstration
+# Iterative Integration Testing Demonstration
 This repository is meant to describe how the iterative integration testing process can be automated. It is based on the Spring guide to consume REST Services(client) (https://github.com/spring-guides/gs-consuming-rest) and the related Quote Service(server) (https://github.com/spring-guides/quoters).
 
 ## Modifications to the projects
