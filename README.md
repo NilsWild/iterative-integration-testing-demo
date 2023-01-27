@@ -2,9 +2,9 @@
 This repository is meant to describe how the iterative integration testing process can be automated. It is based on the Spring guide to consume REST Services(client) (https://github.com/spring-guides/gs-consuming-rest) and the related Quote Service(server) (https://github.com/spring-guides/quoters).
 
 ## Modifications to the projects
-For the client, unit tests using the *TestRestTemplate* as a mock for the actual *RestTemplate* were added to ensure that some quote is written to the log on application startup.
+For the client, unit tests using the *MockRestServiceServer* as a mock for the actual Quote server were added to ensure that some quote is written to the log on application startup.
 For the server, we added tests that check that the "/api/random" interface returns a response containing a "success" *type* and a quote with an *id* and a non empty *quote* string.
-To capture the REST interfaces and messages during test execution of the client a modified *RestTemplate* Bean is used for and configured to use a *BufferingClientHttpRequestFactory* such that an *ClientHttpRequestInterceptor* can be used to capture the requests sent from the client to the *TestRestTemplate* and responses from this template can be captured and modified.
+To capture the REST interfaces and messages during test execution of the client a modified *RestTemplate* Bean is used and configured to use a *BufferingClientHttpRequestFactory* such that an *ClientHttpRequestInterceptor* can be used to capture the requests sent from the client to the server and responses from can be captured and modified.
 
 RestTemplateCustomizer:
 
@@ -87,12 +87,13 @@ For the server, a servlet *Filter* is used to capture responses and capture and 
 
 First, the unit tests for both components are executed. The captured interfaces, messages, abstract test cases (class+method), concrete test cases (class+method+"unit tests") and the component meta data ([client/server]+"1.0.0") are stored in a neo4j database in a schema corresponding to the TCCII meta-model.
 
+Green: Incoming Interfaces, Rose: Outgoing Interfaces, Purple: Components, Orange: Abstract Test Cases, Blue: Concrete Test Cases, Red: Messages
 ![TCCII Model for the Client](./client-uts-graph.svg)
 ![TCCII Model for the Server](./server-uts-graph.svg)
 This results in an interaction expectation from the client. If it calls the "/api/random" endpoint it expects to receive a quote. The two TCCII-Component models are merged to a TCCII-System model.
 ![TCCII Model for the System](./system-uts-graph.svg)
-Next the test of the server can be re-executed but this time the integration test flag is set that tells the test harness to first query the neo4j database for alternative requests for the "/api/random" interface. It will receive the one sent by the client in its unit test. When the test is executed the servlet *Filter* exchanges the original request defined in the unit test case with the one the harness retrieved from the neo4j database. The request and response will be stored once again.
-Next the clients test can be re-executed using the integration test flag. Yet again the test harness will request alternative responses for requests to "/api/random" from the neo4j database. It will receive the response sent by the server in the integration test before. This time the *TestRestTemplate* will send this response by replacing the response that was set within the original test case.
+Next the test of the server can be re-executed but this time the interaction test flag is set that tells the test harness to first query the neo4j database for alternative requests for the "/api/random" interface. It will receive the one sent by the client in its unit test. When the test is executed the servlet *Filter* exchanges the original request defined in the unit test case with the one the harness retrieved from the neo4j database. The request and response will be stored once again.
+Next the clients test can be re-executed using the interaction test flag. Yet again the test harness will request alternative responses for requests to "/api/random" from the neo4j database. It will receive the response sent by the server in the interaction test before. This time the mock will send this response by replacing the response that was set within the original test case.
 Without any additional modification of the client or server the interaction expectation of the client is verified as all tests are successful.
 
 ## Introducting and Detecting defects
